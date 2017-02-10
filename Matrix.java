@@ -100,6 +100,37 @@ public class Matrix {
         return new Matrix(tmp);
     }
 
+    public double[] getRowwiseMax () {
+        double[] tmp = new double[this.m];
+        for (int i = 0; i < tmp.length; i++) {
+            tmp[i] = this.vals[i][0];
+            for (int j = 0; j < this.n; j++) {
+                tmp[i] = tmp[i] < this.vals[i][j] ? this.vals[i][j] : tmp[i];
+            }
+        }
+        return tmp;
+    }
+
+    public double[] getColwiseMax () {
+        double[] tmp = new double[this.n];
+        for (int i = 0; i < tmp.length; i++) {
+            tmp[i] = this.vals[0][i];
+            for (int j = 0; j < this.m; j++) {
+                tmp[i] = tmp[i] < this.vals[j][i] ? this.vals[j][i] : tmp[i];
+            }
+        }
+        return tmp;
+    }
+
+    public double getMax () {
+        double tmp = this.vals[0][0];
+        for (int i = 0; i < this.m; i++) {
+            for (int j = 0; j < this.n; j++) {
+                tmp = tmp < this.vals[i][j] ? this.vals[i][j] : tmp;
+            }
+        }
+        return tmp;
+    }
 
     // SETTERS
     public void setComponent (int i, int j, double s) {
@@ -126,12 +157,8 @@ public class Matrix {
     }
 
     public Matrix transposeNew () {
-        Matrix tmp = new Matrix(this.n, this.m);
-        for (int i = 0; i < this.m; i++) {
-            for (int j = 0; j < this.n; j++) {
-                tmp.setComponent(j, i, this.vals[i][j]);
-            }
-        }
+        Matrix tmp = this.copy();
+        tmp.transpose();
         return tmp;
     }
 
@@ -144,7 +171,7 @@ public class Matrix {
     }
 
     public Matrix addNew (Matrix B) {
-        Matrix tmp = new Matrix(this);
+        Matrix tmp = this.copy();
         tmp.add(B);
         return tmp;
     }
@@ -158,7 +185,7 @@ public class Matrix {
     }
 
     public Matrix subtractNew (Matrix B) {
-        Matrix tmp = new Matrix(this);
+        Matrix tmp = this.copy();
         tmp.subtract(B);
         return tmp;
     }
@@ -184,11 +211,8 @@ public class Matrix {
     }
 
     public Matrix multiplyNew (Matrix B) {
-        Matrix tmp = new Matrix(this);
+        Matrix tmp = this.copy();
         tmp.multiply(B);
         return tmp;
     }
-
-    // TODO
-    // find max values in matrix (column-wise and row-wise)
 }
