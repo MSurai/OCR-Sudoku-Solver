@@ -23,7 +23,7 @@ public class Matrix {
         this.vals = new double[m][n];
         for (int  i = 0; i < m; i++) {
             for (int j = 0; j < n; j++) {
-                vals[i][j] = s;
+                this.vals[i][j] = s;
             }
         }
     }
@@ -35,13 +35,17 @@ public class Matrix {
         this.vals = vals;
     }
 
-    // matrix from one-dimensional packed array
-
-    // matrix created from matrix
+    // matrix created from matrix, deep copy
     public Matrix (Matrix matrix) {
-        this.m = matrix.getRowDimension();
-        this.n = matrix.getColumnDimension();
-        this.vals = matrix.getVals();
+        double[][] tmp = new double[matrix.getRowDimension()][matrix.getColumnDimension()];
+        for (int i = 0; i < tmp.length; i++) {
+            for (int j = 0; j < tmp[i].length; j++) {
+                tmp[i][j] = matrix.getComponent(i, j);
+            }
+        }
+        this.m = tmp.length;
+        this.n = tmp[0].length;
+        this.vals = tmp;
     }
 
 
@@ -90,11 +94,21 @@ public class Matrix {
         return new Matrix(this);
     }
 
-    public Matrix getSubMatrix (int i0, int i1, int j0, int j1) {
-        double[][] tmp = new double[i1-i0+1][j1-j0+1];
-        for (int i = i0; i <= i1; i++) {
-            for (int j = j0; j <= j1; j++) {
-                tmp[i - i0][j - j0] = this.vals[i][j];
+    public Matrix deepCopy () {
+        double[][] tmp = new double[this.m][this.n];
+        for (int i = 0; i < tmp.length; i++) {
+            for (int j = 0; j < tmp[i].length; j++) {
+                tmp[i][j] = this.vals[i][j];
+            }
+        }
+        return new Matrix(tmp);
+    }
+
+    public Matrix getSubMatrix (int x1, int x2, int y1, int y2) {
+        double[][] tmp = new double[y2-y1+1][x2-x1+1];
+        for (int y = y1; y <= y2; y++) {
+            for (int x = x1; x <= x2; x++) {
+                tmp[y - y1][x - x1] = this.vals[y][x];
             }
         }
         return new Matrix(tmp);
@@ -132,6 +146,7 @@ public class Matrix {
         return tmp;
     }
 
+
     // SETTERS
     public void setComponent (int i, int j, double s) {
         this.vals[i][j] = s;
@@ -146,6 +161,44 @@ public class Matrix {
 
 
     // OPERATIONS
+    public void unroll () {
+        double[][] tmp = new double[this.m * this.n][1];
+
+        int counter = 0;
+        for (int i = 0; i < this.m; i++) {
+            for (int j = 0; j < this.n; j++) {
+                tmp[counter][0] = this.vals[i][j];
+                counter++;
+            }
+        }
+
+        setVals(tmp);
+    }
+
+    public Matrix unrollNew () {
+        Matrix tmp = this.deepCopy();
+        tmp.unroll();
+        return tmp;
+    }
+
+    public void reshape (int m, int n) {
+        double[][] tmp = new double[m][n];
+
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                tmp[i][j] = this.vals[i + j * m][0];
+            }
+        }
+
+        setVals(tmp);
+    }
+
+    public Matrix reshapeNew (int m, int n) {
+        Matrix tmp = this.deepCopy();
+        tmp.reshape(m, n);
+        return tmp;
+    }
+
     public void transpose () {
         double [][] tmp = new double[this.n][this.m];
         for (int i = 0; i < this.m; i++) {
@@ -162,6 +215,20 @@ public class Matrix {
         return tmp;
     }
 
+    public void add (double s) {
+        for (int i = 0; i < this.m; i++) {
+            for (int j = 0; j < this.n; j++) {
+                this.vals[i][j] += s;
+            }
+        }
+    }
+
+    public Matrix addNew (double s) {
+        Matrix tmp = this.deepCopy();
+        tmp.add(s);
+        return tmp;
+    }
+
     public void add (Matrix B) {
         for (int i = 0; i < this.m; i++) {
             for (int j = 0; j < this.n; j++) {
@@ -171,8 +238,22 @@ public class Matrix {
     }
 
     public Matrix addNew (Matrix B) {
-        Matrix tmp = this.copy();
+        Matrix tmp = this.deepCopy();
         tmp.add(B);
+        return tmp;
+    }
+
+    public void subtract (double s) {
+        for (int i = 0; i < this.m; i++) {
+            for (int j = 0; j < this.n; j++) {
+                this.vals[i][j] -= s;
+            }
+        }
+    }
+
+    public Matrix subtractNew (double s) {
+        Matrix tmp = this.deepCopy();
+        tmp.subtract(s);
         return tmp;
     }
 
@@ -185,7 +266,7 @@ public class Matrix {
     }
 
     public Matrix subtractNew (Matrix B) {
-        Matrix tmp = this.copy();
+        Matrix tmp = this.deepCopy();
         tmp.subtract(B);
         return tmp;
     }
@@ -196,6 +277,12 @@ public class Matrix {
                 this.vals[i][j] *= s;
             }
         }
+    }
+
+    public Matrix multiplyNew (double s) {
+        Matrix tmp = this.deepCopy();
+        tmp.multiply(s);
+        return tmp;
     }
 
     public void multiply (Matrix B) {
@@ -211,8 +298,62 @@ public class Matrix {
     }
 
     public Matrix multiplyNew (Matrix B) {
-        Matrix tmp = this.copy();
+        Matrix tmp = this.deepCopy();
         tmp.multiply(B);
         return tmp;
+    }
+
+    public void multiplyEach (Matrix B) {
+        for (int i = 0; i < this.m; i++) {
+            for (int j = 0; j < this.n; j++) {
+                this.vals[i][j] *= B.getComponent(i, j);
+            }
+        }
+    }
+
+    public Matrix multiplyEachNew (Matrix B) {
+        Matrix tmp = this.deepCopy();
+        tmp.multiplyEach(B);
+        return tmp;
+    }
+
+    public void divide (double s) {
+        for (int i = 0; i < this.vals.length; i++) {
+            for (int j = 0; j < this.vals[i].length; j++) {
+                this.vals[i][j] /= s;
+            }
+        }
+    }
+
+    public Matrix divideNew (double s) {
+        Matrix tmp = this.deepCopy();
+        tmp.divide(s);
+        return tmp;
+    }
+
+    public void divideEach (Matrix B) {
+        for (int i = 0; i < this.m; i++) {
+            for (int j = 0; j < this.n; j++) {
+                this.vals[i][j] /= B.getComponent(i, j);
+            }
+        }
+    }
+
+    public Matrix divideEachNew (Matrix B) {
+        Matrix tmp = this.deepCopy();
+        tmp.divideEach(B);
+        return tmp;
+    }
+
+
+
+
+    public void print() {
+        for (int i = 0; i < this.m; i++) {
+            for (int j = 0; j < this.n; j++) {
+                System.out.print(this.vals[i][j] + ", ");
+            }
+            System.out.println();
+        }
     }
 }
