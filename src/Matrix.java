@@ -345,6 +345,20 @@ public class Matrix {
         return tmp;
     }
 
+    public void logN () {
+        for (int i = 0; i < this.m; i++) {
+            for (int j = 0; j < this.n; j++) {
+                this.vals[i][j] = Math.log(this.vals[i][j]);
+            }
+        }
+    }
+
+    public Matrix logNNew () {
+        Matrix tmp = this.deepCopy();
+        tmp.logN();
+        return tmp;
+    }
+
 
 
 
